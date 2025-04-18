@@ -869,13 +869,17 @@ in
         ++ lib.flip mapAttrsToList cfg.profiles (
           _: profile:
           let
+            # Handle the edge-case where a CSS string is treated as a file path
+            # where the content begins with a comment.
+            startsWithCssComment = v: lib.isString v && lib.hasPrefix "/*" v;
+
             chromePath =
-              if ((i: lib.isPath i && lib.pathIsDirectory i) profile.userChrome) then
+              if ((v: !(startsWithCssComment v) && lib.pathIsDirectory v) profile.userChrome) then
                 "chrome"
               else
                 "chrome/userChrome.css";
             sourcePath =
-              if ((i: lib.isPath i && lib.types.path.check i) profile.userChrome) then
+              if ((v: !(startsWithCssComment v) && lib.types.path.check v) profile.userChrome) then
                 profile.userChrome
               else
                 null;
